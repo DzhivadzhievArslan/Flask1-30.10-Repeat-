@@ -71,10 +71,13 @@ def count_quotes():
 @app.route("/quotes", methods=["POST"])
 def create_quote():
     new_quote = request.json
-    new_id = quotes[-1]["id"] + 1
-    new_quote["id"] = new_id
-    quotes.append(new_quote)
-    return new_quote, 201  # Created
+    try:
+        query = f"INSERT INTO quotes (author,text) VALUES ('{new_quote['author']}', '{new_quote['text']}')"
+    except KeyError:
+        abort(400, "field author and text required")
+    connection = create_connection(BASE_DIR / 'db.sqlite')
+    execute_query(connection, query)
+    return {}, 201  # Created
 
 
 @app.route("/quotes/<int:id>", methods=["PUT"])
