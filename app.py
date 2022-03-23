@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, abort, request
 from random import choice
+from tools_db import create_connection, execute_query, execute_read_query, BASE_DIR
 
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
@@ -34,12 +35,30 @@ quotes = [
 
 ]
 
+
+@app.route("/quotes")
+def quotes_list():
+    query = "SELECT * FROM quotes"
+    connection = create_connection(BASE_DIR / 'db.sqlite')
+    results = execute_read_query(connection, query)
+    keys = ("id", "author", "text")
+    quotes = []
+    for data in results:
+        quote = dict(zip(keys, data))
+        quotes.append(quote)
+    return jsonify(quotes)
+
+
 @app.route("/quotes/<int:id>")
 def get_quote(id):
-    for quote in quotes:
-        if quote["id"] == id:
-            return jsonify(quote)
-    abort(404, description=f"Quote with id = {id} is not found.")
+    query = f"SELECT * FROM quotes WHERE id={id}"
+    connection = create_connection(BASE_DIR / 'db.sqlite')
+    data = execute_read_query(connection, query, only_one=True)
+    if data is None:
+        abort(404, description=f"Quote with id = {id} is not found.")
+    keys = ("id", "author", "text")
+    quote = dict(zip(keys, data))
+    return jsonify(quote)
 
 
 @app.route("/count_quotes")
@@ -48,9 +67,6 @@ def count_quotes():
         "count": len(quotes)
     }
 
-@app.route("/quotes")
-def quotes_list():
-    return jsonify(quotes)
 
 @app.route("/quotes", methods=["POST"])
 def create_quote():
@@ -58,7 +74,8 @@ def create_quote():
     new_id = quotes[-1]["id"] + 1
     new_quote["id"] = new_id
     quotes.append(new_quote)
-    return new_quote, 201 # Created
+    return new_quote, 201  # Created
+
 
 @app.route("/quotes/<int:id>", methods=["PUT"])
 def edit_quote(id):
@@ -74,6 +91,7 @@ def edit_quote(id):
         quotes.append(new_data)
         return new_data, 201
 
+
 @app.route("/quotes/<int:id>", methods=["DELETE"])
 def delete(id):
     for quote in quotes:
@@ -82,9 +100,11 @@ def delete(id):
             return f"Quote with id {id} was deleted.", 200
         abort(404, description=f"Quote with id = {id} is not found.")
 
+
 @app.route("/random_quotes")
 def random_quotes():
     return jsonify(choice(quotes))
+
 
 if __name__ == "__main__":
     app.run(debug=True)
