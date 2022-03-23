@@ -5,9 +5,9 @@ app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
 
 about_me = {
-    "name": "Евгений",
-    "surname": "Юрченко",
-    "email": "eyurchenko@specialist.ru"
+    "name": "Arslan",
+    "surname": "Dzhivadzhiev",
+    "email": "arsymaster@gmail.com"
 }
 
 quotes = [
