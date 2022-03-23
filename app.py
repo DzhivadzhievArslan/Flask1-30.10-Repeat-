@@ -52,13 +52,35 @@ def count_quotes():
 def quotes_list():
     return jsonify(quotes)
 
-@app.route("/quotes", methods=['POST'])
+@app.route("/quotes", methods=["POST"])
 def create_quote():
     new_quote = request.json
     new_id = quotes[-1]["id"] + 1
     new_quote["id"] = new_id
     quotes.append(new_quote)
     return new_quote, 201 # Created
+
+@app.route("/quotes/<int:id>", methods=["PUT"])
+def edit_quote(id):
+    new_data = request.json
+    for quote in quotes:
+        if quote["id"] == id:
+            if new_data.get("author"):
+                quote["author"] = new_data["author"]
+            if new_data.get("text"):
+                quote["text"] = new_data["text"]
+            return quote, 200
+        new_data["id"] = quotes[-1]["id"] + 1
+        quotes.append(new_data)
+        return new_data, 201
+
+@app.route("/quotes/<int:id>", methods=["DELETE"])
+def delete(id):
+    for quote in quotes:
+        if quote["id"] == id:
+            quotes.remove(quote)
+            return f"Quote with id {id} was deleted.", 200
+        abort(404, description=f"Quote with id = {id} is not found.")
 
 @app.route("/random_quotes")
 def random_quotes():
